@@ -15,13 +15,16 @@
 #include "../include/DrawingElement.h"
 
 #include <math.h>
+
+#include "VoxelManager.h"
+#include "../Cube.h"
 //#include <bits/valarray_after.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0,0,width,height);
 }
 
-void processInput(GLFWwindow* window);
+void processInput(GLFWwindow* window, Cube* naviCube, VoxelManager *voxelChunk);
 
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -34,7 +37,13 @@ float lastFrame = 0.0f;
 
 
 
-
+bool jPressed = false;
+bool kPressed = false;
+bool lPressed = false;
+bool iPressed = false;
+bool oPressed = false;
+bool uPressed = false;
+bool spacePressed = false;
 
 int main()
 {
@@ -45,7 +54,7 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1200, 900, "LearnOpenGL", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -60,7 +69,7 @@ int main()
         return -1;
     }
 
-    glViewport(0,0,800,600);
+    glViewport(0,0,1200,900);
 
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -73,37 +82,13 @@ int main()
     std::vector<DrawingElement> drawingElementsList;
 
     // pushing the x Axis
-
-    unsigned int texture;
-    glGenTextures(1, &texture);
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("../source/Resources/container.jpg",&width,&height,&nrChannels,0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else {
-        std::cout << "Failed to load image" << std::endl;
-    }
-    stbi_image_free(data);
-
-
     Shader ourShader("../source/Shaders/axisVertexShader.shader", "../source/Shaders/axisFragmentShader.shader");
 
     DrawingElement xAxis(ourShader);
     xAxis.setType(DrawingElement::DrawElementType::LINES);
     xAxis.setVertices({
-        -100.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
-        100.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
+        -1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
+        1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
     },6);
     xAxis.setIndices({
         0, 1
@@ -119,8 +104,8 @@ int main()
     DrawingElement yAxis(ourShader);
     yAxis.setType(DrawingElement::DrawElementType::LINES);
     yAxis.setVertices({
-        0.0f, -100.0f, 0.0f,      0.0f, 1.0f, 0.0f,
-        0.0f,  100.0f, 0.0f,      0.0f, 1.0f, 0.0f
+        0.0f, -1000.0f, 0.0f,      0.0f, 1.0f, 0.0f,
+        0.0f,  1000.0f, 0.0f,      0.0f, 1.0f, 0.0f
     },6);
     yAxis.setIndices({
         0, 1
@@ -135,8 +120,8 @@ int main()
     DrawingElement zAxis(ourShader);
     zAxis.setType(DrawingElement::DrawElementType::LINES);
     zAxis.setVertices({
-        0.0f, 0.0f, -100.0f,      0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f,  100.0f,      0.0f, 0.0f, 1.0f
+        0.0f, 0.0f, -1000.0f,      0.0f, 0.0f, 1.0f,
+        0.0f, 0.0f,  1000.0f,      0.0f, 0.0f, 1.0f
     },6);
     zAxis.setIndices({
         0, 1
@@ -148,7 +133,14 @@ int main()
     zAxis.setup();
     drawingElementsList.push_back(zAxis);
 
+    Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
+    float sideLength = 0.5;
+    VoxelManager newChunk(6,6,6,sideLength,"../source/Resources/container.jpg",chunkShader);
+    newChunk.setupChunk();
 
+    Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
+    Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
+    newCube.setupChunk();
     // texture..........................................................
 
 
@@ -164,7 +156,7 @@ int main()
         deltaTime = currenFrame - lastFrame;
         lastFrame = currenFrame;
 
-        processInput(window);
+        processInput(window,&newCube,&newChunk);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -177,27 +169,16 @@ int main()
         projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.01f,100.f);
 
 
-
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         for (auto &it:drawingElementsList) {
-            it.m_shader.setMatrix4fv("view", view);
-            it.m_shader.setMatrix4fv("projection", projection);
+            it.m_shader.use();
             it.draw(view,projection);
         }
 
-        // glBindVertexArray(VAO1);
-        // for (unsigned int i = 0; i < 10; i++) {
-        //     glm::mat4 model = glm::mat4(1.0f);
-        //     model = glm::translate(model,cubePositions[i]);
-        //     float angle = 20.0f * i;
-        //     // model = glm::rotate(model,glm::radians(angle) * (float)glfwGetTime(), glm::vec3(2.0f,0.6f,1.0f));
-        //     model = glm::rotate(model,glm::radians(angle) * (float)glfwGetTime(), cubePositions[i]);
-        //
-        //     ourShader.setMatrix4fv("model", model);
-        //
-        //     glDrawArrays(GL_TRIANGLES,0,36);
-        // }
+        newChunk.draw(view,projection);
 
-
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        newCube.draw(view,projection);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -210,7 +191,7 @@ int main()
 }
 
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
@@ -229,5 +210,88 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
         cameraPos += glm::normalize(glm::cross(cameraFront,cameraUp)) * cameraSpeed;
     }
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+        cameraPos += glm::normalize(glm::cross(glm::cross(cameraFront,cameraUp),cameraFront)) * cameraSpeed;
+    }
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+        cameraPos -= glm::normalize(glm::cross(glm::cross(cameraFront,cameraUp),cameraFront)) * cameraSpeed;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+        if (iPressed == false) {
+            iPressed = true;
+            naviCube->m_lowerLeftCorner.z -= naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        iPressed = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
+        if (jPressed == false) {
+            jPressed = true;
+            naviCube->m_lowerLeftCorner.x -= naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        jPressed = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+        if (kPressed == false) {
+            kPressed = true;
+            naviCube->m_lowerLeftCorner.z += naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        kPressed = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+        if (lPressed == false) {
+            lPressed = true;
+            naviCube->m_lowerLeftCorner.x += naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        lPressed = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+        if (uPressed == false) {
+            uPressed = true;
+            naviCube->m_lowerLeftCorner.y -= naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        uPressed = false;
+    }
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+        if (oPressed == false) {
+            oPressed = true;
+            naviCube->m_lowerLeftCorner.y += naviCube->m_sideLength;
+            naviCube->setupChunk();
+        }
+    }else {
+        oPressed = false;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+        if (spacePressed == false) {
+            spacePressed = true;
+            int k = (naviCube->m_lowerLeftCorner.z / naviCube->m_sideLength);
+            int j = (naviCube->m_lowerLeftCorner.y / naviCube->m_sideLength);
+            int i = (naviCube->m_lowerLeftCorner.x / naviCube->m_sideLength);
+
+            std::cout<<"pressed "<<i <<" "<<j<<" "<<k<<std::endl;
+            voxelChunk->m_voxels[i][j][k] = !voxelChunk->m_voxels[i][j][k];
+            std::cout<<"new "<<voxelChunk->m_voxels[i][j][k]<<std::endl;
+            voxelChunk->setupChunk();
+        }
+    }else {
+        spacePressed = false;
+    }
+
+
+
+
+
+
 
 }

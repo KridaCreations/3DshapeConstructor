@@ -33,12 +33,12 @@ void DrawingElement::setup() {
     // binding the VBO
     glGenBuffers(1, &m_VBO);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_vertices), m_vertices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(float), m_vertices.data(), GL_STATIC_DRAW);
 
     // binding the EBO
     glGenBuffers(1, &m_EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_indices), m_indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
 
     unsigned int offset = 0;
     for (unsigned int i = 0; i < m_attributeArray.size(); i++) {
@@ -53,9 +53,10 @@ void DrawingElement::setup() {
 void DrawingElement::draw(glm::mat4 view,glm::mat4 projection) {
     glBindVertexArray(m_VAO);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    std::cout<<"drawing the  axis"<<std::endl;
-    m_shader.use();
+    // std::cout<<"drawing the  axis"<<std::endl;
+    m_shader.setMatrix4fv("view", view);
+    m_shader.setMatrix4fv("projection", projection);
     glm::mat4 model = glm::mat4(1.0f);
     m_shader.setMatrix4fv("model", model);
-    glDrawArrays(static_cast<GLenum>(m_type),0,m_indices.size());
+    glDrawElements(static_cast<GLenum>(m_type),m_indices.size(),GL_UNSIGNED_INT,0);
 }

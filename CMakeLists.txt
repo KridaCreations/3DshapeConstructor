@@ -18,6 +18,10 @@ add_executable(OpenGLProject
         source/stb_image.cpp
         source/DrawingElement.cpp
         include/DrawingElement.h
+        source/VoxelManager.cpp
+        include/VoxelManager.h
+        Cube.cpp
+        Cube.h
 )
 
 # Include directories

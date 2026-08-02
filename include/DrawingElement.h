@@ -32,7 +32,7 @@ public :
     std::vector<std::pair<unsigned int,bool>> m_attributeArray;
     unsigned int m_stride;
     unsigned int m_VAO, m_VBO, m_EBO;
-    unsigned int texture;
+    unsigned int texture = -1;
     DrawElementType m_type;
     Shader m_shader;
 
