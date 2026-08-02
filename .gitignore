@@ -1,0 +1,86 @@
+# ==========================
+# CLion / IntelliJ IDEA
+# ==========================
+.idea/
+*.iml
+
+# ==========================
+# CMake
+# ==========================
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Generated build system files
+Makefile
+CMakeScripts/
+CMakeTmp/
+CMakeDoxyfile.in
+CMakeDoxygenDefaults.cmake
+
+# ==========================
+# Executables & Libraries
+# ==========================
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.so.*
+*.dylib
+*.a
+*.lib
+
+# ==========================
+# Object Files
+# ==========================
+*.o
+*.obj
+*.lo
+*.slo
+
+# ==========================
+# Debug Symbols
+# ==========================
+*.dSYM/
+*.pdb
+
+# ==========================
+# Logs
+# ==========================
+*.log
+
+# ==========================
+# Temporary Files
+# ==========================
+*.tmp
+*.swp
+*.swo
+*~
+.cache/
+
+# ==========================
+# OS Files
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Coverage
+# ==========================
+*.gcda
+*.gcno
+*.gcov
+coverage/
+html/
+
+# ==========================
+# Profiling
+# ==========================
+gmon.out
+perf.data*
