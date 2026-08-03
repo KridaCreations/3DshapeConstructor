@@ -25,6 +25,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void processInput(GLFWwindow* window, Cube* naviCube, VoxelManager *voxelChunk);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
@@ -34,6 +36,14 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+float lastX = 400, lastY = 300;
+
+float yaw = -90.0f;
+float pitch = 0.0f;
+
+bool firstMouse = true;
+
+float fov = 45.0f;
 
 
 
@@ -44,6 +54,7 @@ bool iPressed = false;
 bool oPressed = false;
 bool uPressed = false;
 bool spacePressed = false;
+bool escapePressed = false;
 
 int main()
 {
@@ -53,7 +64,6 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-
     GLFWwindow* window = glfwCreateWindow(1200, 900, "LearnOpenGL", NULL, NULL);
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -62,6 +72,8 @@ int main()
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -166,7 +178,7 @@ int main()
 
         glm::mat4 projection = glm::mat4(1.0f);
 
-        projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.01f,100.f);
+        projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,100.f);
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -192,9 +204,9 @@ int main()
 
 
 void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
+    // if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    //     glfwSetWindowShouldClose(window, GLFW_TRUE);
+    // }
 
     const float cameraSpeed = 5.5f * deltaTime;
 
@@ -275,9 +287,9 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         if (spacePressed == false) {
             spacePressed = true;
-            int k = (naviCube->m_lowerLeftCorner.z / naviCube->m_sideLength);
-            int j = (naviCube->m_lowerLeftCorner.y / naviCube->m_sideLength);
-            int i = (naviCube->m_lowerLeftCorner.x / naviCube->m_sideLength);
+            int k = ((float)naviCube->m_lowerLeftCorner.z / naviCube->m_sideLength);
+            int j = ((float)naviCube->m_lowerLeftCorner.y / naviCube->m_sideLength);
+            int i = ((float)naviCube->m_lowerLeftCorner.x / naviCube->m_sideLength);
 
             std::cout<<"pressed "<<i <<" "<<j<<" "<<k<<std::endl;
             voxelChunk->m_voxels[i][j][k] = !voxelChunk->m_voxels[i][j][k];
@@ -288,10 +300,76 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
         spacePressed = false;
     }
 
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        // std::cout<<"pressed "<<std::endl;
+        if (escapePressed == false) {
+            escapePressed = true;
+            int cursorMode = glfwGetInputMode(window, GLFW_CURSOR);
+
+            if (cursorMode == GLFW_CURSOR_NORMAL) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            } else if (cursorMode == GLFW_CURSOR_DISABLED) {
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            }
+        }
+    }else {
+        // std::cout<<"pressed "<<std::endl;
+        escapePressed = false;
+    }
+
+}
 
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+
+    if (firstMouse) // initially set to true
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    int cursorMode = glfwGetInputMode(window, GLFW_CURSOR);
+    if (cursorMode != GLFW_CURSOR_DISABLED) {
+        return;
+    }
 
 
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+    lastX = xpos;
+    lastY = ypos;
+
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
 
 
+    yaw   += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f)
+        pitch =  89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+
+
+}
+
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+
+    fov -= (float)yoffset;
+    if (fov < 1.0f)
+        fov = 1.0f;
+    if (fov > 45.0f)
+        fov = 45.0f;
 }
