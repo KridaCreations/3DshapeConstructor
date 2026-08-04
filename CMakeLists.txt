@@ -22,6 +22,9 @@ add_executable(OpenGLProject
         include/VoxelManager.h
         Cube.cpp
         Cube.h
+        source/ImageOutlineManager.cpp
+        include/ImageOutlineManager.h
+        source/stb_image_resize2.cpp
 )
 
 # Include directories

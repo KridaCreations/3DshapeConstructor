@@ -18,6 +18,7 @@
 
 #include "VoxelManager.h"
 #include "../Cube.h"
+#include "ImageOutlineManager.h"
 //#include <bits/valarray_after.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -29,7 +30,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 30.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);;
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -146,14 +147,25 @@ int main()
     drawingElementsList.push_back(zAxis);
 
     Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
-    float sideLength = 0.5;
-    VoxelManager newChunk(6,6,6,sideLength,"../source/Resources/container.jpg",chunkShader);
+    float sideLength = 1;
+    VoxelManager newChunk(150,150,200,sideLength,"../source/Resources/container.jpg",chunkShader);
     newChunk.setupChunk();
+
+
+    // VoxelManager newChunk(150,150,200,sideLength,"../source/Resources/container.jpg",chunkShader);
+    // newChunk.setupChunk();
+
+
+    ImageOutlineManager newImage3d(200*sideLength,150*sideLength,glm::vec3(75,100,-10),glm::vec3(0,0,10),"../source/Resources/StarPlushie.png",chunkShader);
+    newImage3d.setupImageIn3dSpace();
+
 
     Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
     Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
     newCube.setupChunk();
     // texture..........................................................
+
+
 
 
 
@@ -178,7 +190,7 @@ int main()
 
         glm::mat4 projection = glm::mat4(1.0f);
 
-        projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,100.f);
+        projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,500.f);
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -188,6 +200,10 @@ int main()
         }
 
         newChunk.draw(view,projection);
+
+
+        newImage3d.draw(view,projection);
+
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         newCube.draw(view,projection);
@@ -208,7 +224,7 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     //     glfwSetWindowShouldClose(window, GLFW_TRUE);
     // }
 
-    const float cameraSpeed = 5.5f * deltaTime;
+    const float cameraSpeed = 50.0f * deltaTime;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         cameraPos += cameraSpeed * cameraFront;

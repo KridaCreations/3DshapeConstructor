@@ -44,7 +44,7 @@ void Cube::setupChunk() {
     m_drawingElement->m_vertices.clear();
     m_drawingElement->m_indices.clear();
 
-    float offValue = 0.2;
+    float offValue = 0.01;
 
     std::vector<float> location = {m_lowerLeftCorner.x - offValue , m_lowerLeftCorner.y - offValue, m_lowerLeftCorner.z - offValue,1.0f,0.0f,0.0f};
     m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(), location.begin(), location.end());
