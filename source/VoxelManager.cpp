@@ -195,3 +195,24 @@ void VoxelManager::draw(glm::mat4 view,glm::mat4 projection) {
     m_drawingElement->m_shader.setInt("ourTexture", 0);
     m_drawingElement->draw(view,projection);
 }
+
+glm::vec3 VoxelManager::checkVoxel(glm::vec3 location) {
+    int xVoxel = location.x / m_sideLength;
+    int yVoxel = location.y / m_sideLength;
+    int zVoxel = location.z / m_sideLength;
+
+    return glm::vec3(xVoxel,yVoxel,zVoxel);
+}
+
+
+void VoxelManager::switchOffVoxel(glm::vec3 location) {
+    if (((location.x >= 0) && (location.x < m_voxels.size())) && (location.y >= 0) && (location.y < m_voxels[0].size()) && (location.z >= 0) && (location.z < m_voxels[0][0].size())) {
+        m_voxels[location.x][location.y][location.z] = false;
+    }
+}
+
+void VoxelManager::switchOnVoxel(glm::vec3 location) {
+    if (((location.x >= 0) && (location.x < m_voxels.size())) && (location.y >= 0) && (location.y < m_voxels[0].size()) && (location.z >= 0) && (location.z < m_voxels[0][0].size())) {
+        m_voxels[location.x][location.y][location.z] = true;
+    }
+}

@@ -25,6 +25,8 @@ add_executable(OpenGLProject
         source/ImageOutlineManager.cpp
         include/ImageOutlineManager.h
         source/stb_image_resize2.cpp
+        source/ImageVoxelChunkIntersector.cpp
+        include/ImageVoxelChunkIntersector.h
 )
 
 # Include directories

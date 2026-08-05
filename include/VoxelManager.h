@@ -30,9 +30,16 @@ class VoxelManager {
 
     void setupChunk();
 
+    void removeBLock(int x,int y, int z);
+    void addBLock(int x,int y, int z);
+
     void draw(glm::mat4 view,glm::mat4 projection);
 
+    glm::vec3 checkVoxel(glm::vec3 location);
 
+    void switchOffVoxel(glm::vec3 location);
+
+    void switchOnVoxel(glm::vec3 location);
 };
 
 

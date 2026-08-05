@@ -19,6 +19,7 @@
 #include "VoxelManager.h"
 #include "../Cube.h"
 #include "ImageOutlineManager.h"
+#include "ImageVoxelChunkIntersector.h"
 //#include <bits/valarray_after.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -30,7 +31,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 30.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 300.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);;
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -59,7 +60,6 @@ bool escapePressed = false;
 
 int main()
 {
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -83,6 +83,7 @@ int main()
     }
 
     glViewport(0,0,1200,900);
+    glEnable(GL_DEPTH_TEST);
 
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -100,9 +101,9 @@ int main()
     DrawingElement xAxis(ourShader);
     xAxis.setType(DrawingElement::DrawElementType::LINES);
     xAxis.setVertices({
-        -1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
-        1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
-    },6);
+                          -1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
+                          1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
+                      },6);
     xAxis.setIndices({
         0, 1
     });
@@ -117,9 +118,9 @@ int main()
     DrawingElement yAxis(ourShader);
     yAxis.setType(DrawingElement::DrawElementType::LINES);
     yAxis.setVertices({
-        0.0f, -1000.0f, 0.0f,      0.0f, 1.0f, 0.0f,
-        0.0f,  1000.0f, 0.0f,      0.0f, 1.0f, 0.0f
-    },6);
+                          0.0f, -1000.0f, 0.0f,      0.0f, 1.0f, 0.0f,
+                          0.0f,  1000.0f, 0.0f,      0.0f, 1.0f, 0.0f
+                      },6);
     yAxis.setIndices({
         0, 1
     });
@@ -133,9 +134,9 @@ int main()
     DrawingElement zAxis(ourShader);
     zAxis.setType(DrawingElement::DrawElementType::LINES);
     zAxis.setVertices({
-        0.0f, 0.0f, -1000.0f,      0.0f, 0.0f, 1.0f,
-        0.0f, 0.0f,  1000.0f,      0.0f, 0.0f, 1.0f
-    },6);
+                          0.0f, 0.0f, -1000.0f,      0.0f, 0.0f, 1.0f,
+                          0.0f, 0.0f,  1000.0f,      0.0f, 0.0f, 1.0f
+                      },6);
     zAxis.setIndices({
         0, 1
     });
@@ -148,7 +149,8 @@ int main()
 
     Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
     float sideLength = 1;
-    VoxelManager newChunk(150,150,200,sideLength,"../source/Resources/container.jpg",chunkShader);
+    int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
+    VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/container.jpg",chunkShader);
     newChunk.setupChunk();
 
 
@@ -156,23 +158,16 @@ int main()
     // newChunk.setupChunk();
 
 
-    ImageOutlineManager newImage3d(200*sideLength,150*sideLength,glm::vec3(75,100,-10),glm::vec3(0,0,10),"../source/Resources/StarPlushie.png",chunkShader);
+    ImageOutlineManager newImage3d(((float)chunkHeight)*sideLength,((float)chunkWidth)*sideLength,glm::vec3((chunkWidth*sideLength)/2,(chunkHeight*sideLength)/2,(chunklength*sideLength)+20),glm::vec3(0,0,-1),"../source/Resources/StarPlushie.png",chunkShader);
     newImage3d.setupImageIn3dSpace();
 
 
     Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
     Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
     newCube.setupChunk();
-    // texture..........................................................
 
 
-
-
-
-    // enabling depth testing
-    glEnable(GL_DEPTH_TEST);
-
-
+    ImageVoxelChunkIntersector intersector(&newChunk,&newImage3d);
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -183,6 +178,7 @@ int main()
         processInput(window,&newCube,&newChunk);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        // glClearColor(1, 0, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
@@ -190,7 +186,7 @@ int main()
 
         glm::mat4 projection = glm::mat4(1.0f);
 
-        projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,500.f);
+        projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,2000.f);
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -210,6 +206,25 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+
+        //using the intersector
+        if (intersector.isDone() == false) {
+            if (intersector.isRunning() == false) {
+                std::cout<<"starting the intersector  "<<std::endl;
+                intersector.start(sideLength);
+            }else {
+                intersector.moveStep();
+                // std::cout<<"moved the intersector"<<std::endl;
+            }
+            if (intersector.isDone() == true) {
+                std::cout<<"done moving the intersector"<<std::endl;
+                newChunk.setupChunk();
+            }
+        }
+        else {
+
+        }
     }
 
 
@@ -224,7 +239,7 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     //     glfwSetWindowShouldClose(window, GLFW_TRUE);
     // }
 
-    const float cameraSpeed = 50.0f * deltaTime;
+    const float cameraSpeed = 150.0f * deltaTime;
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         cameraPos += cameraSpeed * cameraFront;

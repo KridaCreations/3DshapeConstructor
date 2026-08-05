@@ -38,6 +38,13 @@ public:
     void draw(glm::mat4 view,glm::mat4 projection);
 
     unsigned char *  resizeImage(unsigned char *imageDate,int currentWidth,int m_nrChannels,int currentHeight,int newWidth,int newHeight);
+
+    unsigned char *  removeBackground(unsigned char *imageData, int length,int width,int nrChannels);
+
+    glm::vec3 getImagePixel3dPosition(int x,int y);
+
+    void setPosition(glm::vec3 newPosition);
+    bool isPixelTransparent(int x,int y);
 };
 
 
