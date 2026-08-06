@@ -149,15 +149,16 @@ int main()
 
     Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
     float sideLength = 1;
-    int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
-    // int chunklength = 50,chunkWidth = 50, chunkHeight = 75;
-    VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/container.jpg",chunkShader,glm::vec3(0,0,0));
-    newChunk.setupChunk();
+    // int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
+    int chunklength = 25,chunkWidth = 25, chunkHeight = 37;
+    VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/GreenRectangle.png",chunkShader,glm::vec3(0,0,0));
+    // newChunk.setupChunk();
+    newChunk.applyMarchingCube();
     float chunkDiagonal = glm::sqrt(((chunkWidth * chunkWidth) + (chunkHeight * chunkHeight)));
 
-    float angleGap = 5;
+    float angleGap = 10;
     std::vector<ImageOutlineManager>images;
-    for (float i = 0;i<180.0f;i+=angleGap) {
+    for (float i = 0;i<180.0f;i += angleGap) {
         int imageHeight = ((float)chunkHeight)*sideLength, imageWidth = ((float)chunkWidth)*sideLength;
         glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i))*1,0,glm::cos(glm::radians(i))* -1);
         glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
@@ -168,10 +169,6 @@ int main()
     }
 
 
-
-    // Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
-    // Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
-    // newCube.setupChunk();
 
     std::vector<ImageVoxelChunkIntersector> intersectorArray;
     for (int i = 0;i<images.size();i++) {
@@ -209,7 +206,6 @@ int main()
         newChunk.draw(view,projection);
 
 
-        // newImage3d.draw(view,projection);
         for (auto &it:images) {
             it.draw(view,projection);
         }
@@ -232,7 +228,8 @@ int main()
                 }
                 if (intersectorArray[currentIntersector].isDone() == true) {
                     std::cout<<"done moving the intersector "<<currentIntersector<<std::endl;
-                    newChunk.setupChunk();
+                    // newChunk.setupChunk();
+                    newChunk.applyMarchingCube();
                 }
             }
             else {
@@ -240,23 +237,6 @@ int main()
             }
         }
 
-        //using the intersector
-        // if (intersector.isDone() == false) {
-        //     if (intersector.isRunning() == false) {
-        //         std::cout<<"starting the intersector  "<<std::endl;
-        //         intersector.start(sideLength);
-        //     }else {
-        //         intersector.moveStep();
-        //         // std::cout<<"moved the intersector"<<std::endl;
-        //     }
-        //     if (intersector.isDone() == true) {
-        //         std::cout<<"done moving the intersector"<<std::endl;
-        //         newChunk.setupChunk();
-        //     }
-        // }
-        // else {
-        //
-        // }
     }
 
 

@@ -135,7 +135,6 @@ void VoxelManager::setupChunk() {
                         m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
                         lastIndex += 4;
                     }
-                    // std::cout<<((j - 1) < 0)<<" "<<(m_voxels[i][j-1][k] == false)<<std::endl;
                     if (((j-1) < 0) || (m_voxels[i][j-1][k] == false)  ) {
 
                         float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
@@ -219,6 +218,152 @@ void VoxelManager::setupChunk() {
 }
 
 
+void VoxelManager::applyMarchingCube() {
+    m_drawingElement->setType(DrawingElement::DrawElementType::TRIANGLES);
+    m_drawingElement->setAttributeArray({
+    {3,true},
+    {2,true}
+    });
+    m_drawingElement->m_stride = 5;
+    m_drawingElement->m_vertices.clear();
+    m_drawingElement->m_indices.clear();
+
+    int edgeLastIndex = 0;
+
+    for (int i = 0;i<m_voxels.size();i++) {
+        for (int j = 0;j<m_voxels[i].size();j++) {
+            for (int k = 0;k<m_voxels[i][j].size();k++) {
+                int cubeIndex = getMarchingCubeIndex(i,j,k);
+
+                int edges = edgeTable[cubeIndex];
+
+                std::vector<int> edgesList = getEdgesIndex(edges);
+                for (int edgeIndex = 0;edgeIndex<edgesList.size();edgeIndex++) {
+                    glm::vec3 location = getEdgeLocation(i,j,k,edgesList[edgeIndex]);
+                    int xTexture = (rand() % 2),yTexture = (rand() % 2);
+                    std::vector<float> vertexArray = {location.x,location.y,location.z,(float)xTexture,(float)yTexture};
+                    m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),vertexArray.begin(),vertexArray.end());
+                }
+
+                int *triValue = triTable[cubeIndex];
+                for (int itr = 0;itr<16;itr++) {
+                    if (triValue[itr] != -1) {
+                        auto it = std::find(edgesList.begin(), edgesList.end(), triValue[itr]);
+                        int listIndex = it - edgesList.begin();
+                        m_drawingElement->m_indices.push_back(edgeLastIndex + listIndex);
+                    }
+                }
+                edgeLastIndex += edgesList.size();
+
+            }
+        }
+    }
+
+    m_drawingElement->setup();
+
+    std::cout<<"marching cube chunk setup done"<<std::endl;
+
+}
+
+bool VoxelManager::getVoxelValue(int x, int y, int z) {
+    if ((x >= 0) && (x < m_voxels.size()) && ((y >= 0) && (y < m_voxels[0].size())) && ((z >= 0) && (z < m_voxels[0][0].size()))) {
+        return m_voxels[x][y][z];
+    }
+    return false;
+}
+
+glm::vec3 VoxelManager::getVoxelPosition(int x, int y, int z) {
+    glm::vec3 cornerPosition = m_position - glm::vec3((float)m_width/2.0f,0,(float)m_length/2.0f);
+    glm::vec3 voxelPosition = cornerPosition + glm::vec3(x * m_sideLength,y * m_sideLength, z * m_sideLength);
+    voxelPosition += glm::vec3((float)m_sideLength/2.0f,(float)m_sideLength/2.0f,(float)m_sideLength/2.0f);
+    return voxelPosition;
+}
+
+glm::vec3 VoxelManager::getEdgeLocation(int x, int y, int z,int index) {
+    glm::vec3 voxelPosition = getVoxelPosition(x,y,z);
+    if (index == 0) {
+        voxelPosition += glm::vec3(m_sideLength/2.0f,0,0);
+    }
+    else if (index == 1) {
+        voxelPosition += glm::vec3(m_sideLength,0,m_sideLength/2.0f);
+    }
+    else if (index == 2) {
+        voxelPosition += glm::vec3(m_sideLength/2.0,0,m_sideLength);
+    }
+    else if (index == 3) {
+        voxelPosition += glm::vec3(0,0,m_sideLength/2.0f);
+    }
+    else if (index == 4) {
+        voxelPosition += glm::vec3(m_sideLength/2.0f,m_sideLength,0);
+    }
+    else if (index == 5) {
+        voxelPosition += glm::vec3(m_sideLength,m_sideLength,m_sideLength/2.0f);
+    }
+    else if (index == 6) {
+        voxelPosition += glm::vec3(m_sideLength/2.0f,m_sideLength,m_sideLength);
+    }
+    else if (index == 7) {
+        voxelPosition += glm::vec3(0,m_sideLength,m_sideLength/2.0f);
+    }
+    else if (index == 8) {
+        voxelPosition += glm::vec3(0,m_sideLength/2.0f,0);
+    }
+    else if (index == 9) {
+        voxelPosition += glm::vec3(m_sideLength,m_sideLength/2.0f,0);
+    }
+    else if (index == 10) {
+        voxelPosition += glm::vec3(m_sideLength,m_sideLength/2.0f,m_sideLength);
+    }
+    else if (index == 11) {
+        voxelPosition += glm::vec3(0,m_sideLength/2.0f,m_sideLength);
+    }
+
+    return voxelPosition;
+
+}
+
+
+std::vector<int> VoxelManager::getEdgesIndex(int value) {
+    std::vector<int> edges;
+    int index = 0;
+    while (value) {
+        if ((value%2) == 1) {
+            edges.push_back(index);
+        }
+        value = value/2;
+        index++;
+    }
+    return edges;
+}
+
+int VoxelManager::getMarchingCubeIndex(int x, int y, int z) {
+    int indexValue = 0;
+    if (getVoxelValue(x,y,z) == true) { // 0
+        indexValue |= 1;
+    }
+    if (getVoxelValue(x+1,y,z) == true) { // 1
+        indexValue |= 2;
+    }
+    if (getVoxelValue(x+1,y,z+1) == true) { // 2
+        indexValue |= 4;
+    }
+    if (getVoxelValue(x,y,z+1) == true) { // 3
+        indexValue |= 8;
+    }
+    if (getVoxelValue(x,y+1,z) == true) { // 4
+        indexValue |= 16;
+    }
+    if (getVoxelValue(x+1,y+1,z) == true) { // 5
+        indexValue |= 32;
+    }
+    if (getVoxelValue(x+1,y+1,z+1) == true) { // 6
+        indexValue |= 64;
+    }
+    if (getVoxelValue(x,y+1,z+1) == true) { // 7
+        indexValue |= 128;
+    }
+    return indexValue;
+}
 
 void VoxelManager::draw(glm::mat4 view,glm::mat4 projection) {
     m_drawingElement->m_shader.use();

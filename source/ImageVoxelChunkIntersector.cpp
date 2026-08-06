@@ -43,7 +43,7 @@ void ImageVoxelChunkIntersector::moveStep() {
     float distance = glm::distance(m_imageStartPosition,m_image->m_position);
     float m_voxelDiagonal = (m_voxelManager->m_width * m_voxelManager->m_width) + (m_voxelManager->m_length * m_voxelManager->m_length);
     // std::cout<<"distance "<<distance<<" "<<(distance*distance)<<std::endl;
-    if ((distance * distance) > (m_voxelDiagonal * 2.0f * 2.0f)) {
+    if ((distance * distance) > (m_voxelDiagonal * 2.5)) {
         done = true;
         std::cout<<"final position image "<<m_image->m_position.x<<","<<m_image->m_position.y<<","<<m_image->m_position.z<<std::endl;
     }
