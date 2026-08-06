@@ -21,12 +21,12 @@ class VoxelManager {
     int m_length,m_width, m_height;
     float m_sideLength;
     std::vector<std::vector<std::vector<bool>>> m_voxels;
-
+    glm::vec3 m_position;
     DrawingElement* m_drawingElement;
 
     unsigned int m_texture;
 
-    VoxelManager(int length,int width,int height,float sideLength,std::string texturePath,Shader shader);
+    VoxelManager(int length,int width,int height,float sideLength,std::string texturePath,Shader shader,glm::vec3 position);
 
     void setupChunk();
 

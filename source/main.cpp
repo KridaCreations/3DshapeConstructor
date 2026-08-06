@@ -26,7 +26,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0,0,width,height);
 }
 
-void processInput(GLFWwindow* window, Cube* naviCube, VoxelManager *voxelChunk);
+void processInput(GLFWwindow* window, VoxelManager *voxelChunk);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -150,32 +150,43 @@ int main()
     Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
     float sideLength = 1;
     int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
-    VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/container.jpg",chunkShader);
+    // int chunklength = 50,chunkWidth = 50, chunkHeight = 75;
+    VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/container.jpg",chunkShader,glm::vec3(0,0,0));
     newChunk.setupChunk();
+    float chunkDiagonal = glm::sqrt(((chunkWidth * chunkWidth) + (chunkHeight * chunkHeight)));
+
+    float angleGap = 5;
+    std::vector<ImageOutlineManager>images;
+    for (float i = 0;i<180.0f;i+=angleGap) {
+        int imageHeight = ((float)chunkHeight)*sideLength, imageWidth = ((float)chunkWidth)*sideLength;
+        glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i))*1,0,glm::cos(glm::radians(i))* -1);
+        glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
+        imagePosition.y = newChunk.m_height/2.0f;
+        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",chunkShader);
+        newImage3d.setupImageIn3dSpace();
+        images.push_back(newImage3d);
+    }
 
 
-    // VoxelManager newChunk(150,150,200,sideLength,"../source/Resources/container.jpg",chunkShader);
-    // newChunk.setupChunk();
 
+    // Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
+    // Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
+    // newCube.setupChunk();
 
-    ImageOutlineManager newImage3d(((float)chunkHeight)*sideLength,((float)chunkWidth)*sideLength,glm::vec3((chunkWidth*sideLength)/2,(chunkHeight*sideLength)/2,(chunklength*sideLength)+20),glm::vec3(0,0,-1),"../source/Resources/StarPlushie.png",chunkShader);
-    newImage3d.setupImageIn3dSpace();
+    std::vector<ImageVoxelChunkIntersector> intersectorArray;
+    for (int i = 0;i<images.size();i++) {
+        ImageVoxelChunkIntersector intersector(&newChunk,&images[i]);
+        intersectorArray.push_back(intersector);
+    }
 
-
-    Shader cubeShader("../source/Shaders/CubeVertexShader.shader", "../source/Shaders/CubeFragmentShader.shader");
-    Cube newCube(sideLength,glm::vec3(0,0,0),"../source/Resources/container.jpg",cubeShader);
-    newCube.setupChunk();
-
-
-    ImageVoxelChunkIntersector intersector(&newChunk,&newImage3d);
-
+    int currentIntersector = 0;
 
     while (!glfwWindowShouldClose(window)) {
         float currenFrame = glfwGetTime();
         deltaTime = currenFrame - lastFrame;
         lastFrame = currenFrame;
 
-        processInput(window,&newCube,&newChunk);
+        processInput(window,&newChunk);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         // glClearColor(1, 0, 1, 1);
@@ -198,33 +209,54 @@ int main()
         newChunk.draw(view,projection);
 
 
-        newImage3d.draw(view,projection);
-
+        // newImage3d.draw(view,projection);
+        for (auto &it:images) {
+            it.draw(view,projection);
+        }
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        newCube.draw(view,projection);
+
 
         glfwSwapBuffers(window);
         glfwPollEvents();
 
 
-        //using the intersector
-        if (intersector.isDone() == false) {
-            if (intersector.isRunning() == false) {
-                std::cout<<"starting the intersector  "<<std::endl;
-                intersector.start(sideLength);
-            }else {
-                intersector.moveStep();
-                // std::cout<<"moved the intersector"<<std::endl;
+        if (currentIntersector < intersectorArray.size()) {
+            if (intersectorArray[currentIntersector].isDone() == false) {
+                if (intersectorArray[currentIntersector].isRunning() == false) {
+                    std::cout<<"starting the intersector  "<<currentIntersector<<std::endl;
+                    intersectorArray[currentIntersector].start(sideLength);
+                }else {
+                    intersectorArray[currentIntersector].moveStep();
+                    // std::cout<<"moved the intersector"<<std::endl;
+                }
+                if (intersectorArray[currentIntersector].isDone() == true) {
+                    std::cout<<"done moving the intersector "<<currentIntersector<<std::endl;
+                    newChunk.setupChunk();
+                }
             }
-            if (intersector.isDone() == true) {
-                std::cout<<"done moving the intersector"<<std::endl;
-                newChunk.setupChunk();
+            else {
+                currentIntersector++;
             }
         }
-        else {
 
-        }
+        //using the intersector
+        // if (intersector.isDone() == false) {
+        //     if (intersector.isRunning() == false) {
+        //         std::cout<<"starting the intersector  "<<std::endl;
+        //         intersector.start(sideLength);
+        //     }else {
+        //         intersector.moveStep();
+        //         // std::cout<<"moved the intersector"<<std::endl;
+        //     }
+        //     if (intersector.isDone() == true) {
+        //         std::cout<<"done moving the intersector"<<std::endl;
+        //         newChunk.setupChunk();
+        //     }
+        // }
+        // else {
+        //
+        // }
     }
 
 
@@ -234,7 +266,7 @@ int main()
 }
 
 
-void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
+void processInput(GLFWwindow* window,VoxelManager *voxelChunk) {
     // if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     //     glfwSetWindowShouldClose(window, GLFW_TRUE);
     // }
@@ -263,8 +295,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
         if (iPressed == false) {
             iPressed = true;
-            naviCube->m_lowerLeftCorner.z -= naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         iPressed = false;
@@ -272,8 +302,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
         if (jPressed == false) {
             jPressed = true;
-            naviCube->m_lowerLeftCorner.x -= naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         jPressed = false;
@@ -281,8 +309,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
         if (kPressed == false) {
             kPressed = true;
-            naviCube->m_lowerLeftCorner.z += naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         kPressed = false;
@@ -290,8 +316,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
         if (lPressed == false) {
             lPressed = true;
-            naviCube->m_lowerLeftCorner.x += naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         lPressed = false;
@@ -299,8 +323,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
         if (uPressed == false) {
             uPressed = true;
-            naviCube->m_lowerLeftCorner.y -= naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         uPressed = false;
@@ -308,8 +330,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
         if (oPressed == false) {
             oPressed = true;
-            naviCube->m_lowerLeftCorner.y += naviCube->m_sideLength;
-            naviCube->setupChunk();
         }
     }else {
         oPressed = false;
@@ -318,14 +338,6 @@ void processInput(GLFWwindow* window,Cube* naviCube,VoxelManager *voxelChunk) {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
         if (spacePressed == false) {
             spacePressed = true;
-            int k = ((float)naviCube->m_lowerLeftCorner.z / naviCube->m_sideLength);
-            int j = ((float)naviCube->m_lowerLeftCorner.y / naviCube->m_sideLength);
-            int i = ((float)naviCube->m_lowerLeftCorner.x / naviCube->m_sideLength);
-
-            std::cout<<"pressed "<<i <<" "<<j<<" "<<k<<std::endl;
-            voxelChunk->m_voxels[i][j][k] = !voxelChunk->m_voxels[i][j][k];
-            std::cout<<"new "<<voxelChunk->m_voxels[i][j][k]<<std::endl;
-            voxelChunk->setupChunk();
         }
     }else {
         spacePressed = false;

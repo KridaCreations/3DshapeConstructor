@@ -5,11 +5,12 @@
 #include "../include/VoxelManager.h"
 
 
-VoxelManager::VoxelManager(int length,int width,int height,float sideLength,std::string texturePath , Shader shader) {
+VoxelManager::VoxelManager(int length,int width,int height,float sideLength,std::string texturePath , Shader shader, glm::vec3 position) {
     m_length = length;
     m_width = width;
     m_height = height;
     m_sideLength = sideLength;
+    m_position = position;
     m_voxels.resize(length);
     for (auto &it: m_voxels) {
         it.resize(height);
@@ -56,6 +57,8 @@ void VoxelManager::setupChunk() {
     m_drawingElement->m_stride = 5;
     m_drawingElement->m_vertices.clear();
     m_drawingElement->m_indices.clear();
+    float xoffset = m_position.x - ((float)m_width/2.0f);
+    float zoffset = m_position.z - ((float)m_length/2.0f);
     int lastIndex = 0;
     for (int i = 0 ;i<m_voxels.size(); i++) {
         for (int j = 0; j < m_voxels[i].size(); j++) {
@@ -64,8 +67,11 @@ void VoxelManager::setupChunk() {
                     // std::cout<<"i "<<i<<" j "<<j<<" k "<<k<<std::endl;
                     if ( ((k+1) >= m_voxels[i][j].size()) ||  (m_voxels[i][j][k+1]==false)) {
 
-
-                        std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j*(float)(m_sideLength),(float)(k+1) * (float)(m_sideLength), 1.0f, 1.0f};
+                        // *** + m_position.x - ((int)m_width/2.0)
+                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
+                        float firstCornery = ((float)j*(float)(m_sideLength)) ;
+                        float firstCornerz = ((float)(k+1) * (float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[0] = location[0] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -84,7 +90,11 @@ void VoxelManager::setupChunk() {
                     }
                     if ( ((k-1) < 0) || (m_voxels[i][j][k-1]==false)) {
 
-                        std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k * (float)(m_sideLength), 1.0f, 1.0f};
+                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
+                        float firstCornery = (float)j*(float)(m_sideLength) ;
+                        float firstCornerz = ((float)k * (float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k * (float)(m_sideLength), 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[0] = location[0] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -104,7 +114,12 @@ void VoxelManager::setupChunk() {
                     }
                     if (((j+1) >= m_voxels[i].size()) || (m_voxels[i][j+1][k] == false) ) {
 
-                        std::vector<float> location = {(float)i*(float)(m_sideLength),(float)(j + 1) * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
+                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
+                        float firstCornery = (float)(j + 1) * (float)(m_sideLength) ;
+                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+
+                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)(j + 1) * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[0] = location[0] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -123,7 +138,12 @@ void VoxelManager::setupChunk() {
                     // std::cout<<((j - 1) < 0)<<" "<<(m_voxels[i][j-1][k] == false)<<std::endl;
                     if (((j-1) < 0) || (m_voxels[i][j-1][k] == false)  ) {
 
-                        std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
+                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
+                        float firstCornery = (float)j * (float)(m_sideLength) ;
+                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+
+                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[0] = location[0] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -141,7 +161,12 @@ void VoxelManager::setupChunk() {
                     }
                     if (((i+1) >= m_voxels.size()) ||  (m_voxels[i+1][j][k] == false) ) {
 
-                        std::vector<float> location = {(float)(i + 1) * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
+                        float firstCornerx = ((float)(i + 1) * (float)(m_sideLength)) + xoffset;
+                        float firstCornery = (float)j*(float)(m_sideLength) ;
+                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+
+                        // std::vector<float> location = {(float)(i + 1) * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[2] = location[2] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -159,7 +184,12 @@ void VoxelManager::setupChunk() {
                     }
                     if ( ((i-1) < 0) ||  (m_voxels[i-1][j][k] == false)) {
 
-                        std::vector<float> location = {(float)i * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
+                        float firstCornerx = ((float)i * (float)(m_sideLength)) + xoffset;
+                        float firstCornery = (float)j*(float)(m_sideLength) ;
+                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
+                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+
+                        // std::vector<float> location = {(float)i * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
                         m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
                         location[2] = location[2] + (float)m_sideLength;
                         location[4] = 0.0f;
@@ -184,6 +214,8 @@ void VoxelManager::setupChunk() {
 
 
     m_drawingElement->setup();
+
+    std::cout<<"chunk setup done"<<std::endl;
 }
 
 
@@ -197,11 +229,18 @@ void VoxelManager::draw(glm::mat4 view,glm::mat4 projection) {
 }
 
 glm::vec3 VoxelManager::checkVoxel(glm::vec3 location) {
+    glm::vec3 offset = glm::vec3((float)m_width/2.0f,0,(float)m_length/2.0f);
+    glm::vec3 corner = m_position - offset;
+    location = location - corner;
     int xVoxel = location.x / m_sideLength;
     int yVoxel = location.y / m_sideLength;
     int zVoxel = location.z / m_sideLength;
 
+    // std::cout<<"for location "<<location.x<<","<<location.y<<","<<location.z<<std::endl;
+    // std::cout<<"voxel "<<xVoxel<<","<<yVoxel<<","<<zVoxel<<std::endl;
     return glm::vec3(xVoxel,yVoxel,zVoxel);
+
+
 }
 
 
