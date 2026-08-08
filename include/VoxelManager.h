@@ -21,6 +21,7 @@ class VoxelManager {
     int m_length,m_width, m_height;
     float m_sideLength;
     std::vector<std::vector<std::vector<bool>>> m_voxels;
+    std::vector<std::vector<std::vector<glm::vec3>>> m_voxelsNormals;
     glm::vec3 m_position;
     DrawingElement* m_drawingElement;
 
@@ -45,10 +46,11 @@ class VoxelManager {
     bool getVoxelValue(int x,int y,int z);
     glm::vec3 getVoxelPosition(int x,int y,int z);
     glm::vec3 getEdgeLocation(int x, int y, int z,int index);
+    // glm::vec3 getEdgeNormal(int x, int y, int z,int index);
+    glm::vec3 getVoxelNormal(int x,int y,int z);
     int getMarchingCubeIndex(int x,int y,int z);
     std::vector<int> getEdgesIndex(int value);
-
-
+    uint64_t getEdgeKey(glm::vec3 edge);
 
 
     int edgeTable[256]={

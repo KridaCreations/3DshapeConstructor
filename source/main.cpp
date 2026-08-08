@@ -147,23 +147,26 @@ int main()
     zAxis.setup();
     drawingElementsList.push_back(zAxis);
 
-    Shader chunkShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
+    Shader chunkShader("../source/Shaders/VoxelVertexShader.shader", "../source/Shaders/VoxelFragmentShader.shader");
     float sideLength = 1;
     // int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
     int chunklength = 25,chunkWidth = 25, chunkHeight = 37;
+    // int chunklength = 1,chunkWidth = 1, chunkHeight = 1;
     VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/GreenRectangle.png",chunkShader,glm::vec3(0,0,0));
     // newChunk.setupChunk();
     newChunk.applyMarchingCube();
     float chunkDiagonal = glm::sqrt(((chunkWidth * chunkWidth) + (chunkHeight * chunkHeight)));
 
-    float angleGap = 10;
+
+    Shader imageShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
+    float angleGap = 1;
     std::vector<ImageOutlineManager>images;
     for (float i = 0;i<180.0f;i += angleGap) {
         int imageHeight = ((float)chunkHeight)*sideLength, imageWidth = ((float)chunkWidth)*sideLength;
         glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i))*1,0,glm::cos(glm::radians(i))* -1);
         glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
         imagePosition.y = newChunk.m_height/2.0f;
-        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",chunkShader);
+        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",imageShader);
         newImage3d.setupImageIn3dSpace();
         images.push_back(newImage3d);
     }
