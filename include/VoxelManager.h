@@ -51,6 +51,10 @@ class VoxelManager {
     int getMarchingCubeIndex(int x,int y,int z);
     std::vector<int> getEdgesIndex(int value);
     uint64_t getEdgeKey(glm::vec3 edge);
+    uint64_t getVertexKey(glm::vec3 vertex);
+    glm::vec3 getCornerPosition();
+
+    int addVec3KeyTohash(glm::vec3 vertex, std::unordered_map<uint64_t,uint64_t> &edgeToVertex,std::vector<std::pair<glm::vec3,glm::vec3>> &verticesData);
 
 
     int edgeTable[256]={

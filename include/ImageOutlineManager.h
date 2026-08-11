@@ -26,7 +26,7 @@ public:
     glm::vec3 m_position;
     glm::vec3 m_forwardVector;
     std::vector<std::vector<std::vector<float>>> m_pixelData;
-
+    float m_ratio;
     DrawingElement* m_drawingElement;
 
     unsigned int m_texture;
@@ -45,6 +45,9 @@ public:
 
     void setPosition(glm::vec3 newPosition);
     bool isPixelTransparent(int x,int y);
+
+    void removeBackgroundHsl();
+    void convertToHsV(std::vector<std::vector<std::vector<float>>> &pixelData);
 };
 
 

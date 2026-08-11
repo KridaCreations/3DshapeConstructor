@@ -69,157 +69,96 @@ void VoxelManager::setupChunk() {
     m_drawingElement->setType(DrawingElement::DrawElementType::TRIANGLES);
     m_drawingElement->setAttributeArray({
     {3,true},
-    {2,true}
+    {3,true}
     });
-    m_drawingElement->m_stride = 5;
+    m_drawingElement->m_stride = 6;
     m_drawingElement->m_vertices.clear();
     m_drawingElement->m_indices.clear();
-    float xoffset = m_position.x - ((float)m_width/2.0f);
-    float zoffset = m_position.z - ((float)m_length/2.0f);
-    int lastIndex = 0;
-    for (int i = 0 ;i<m_voxels.size(); i++) {
-        for (int j = 0; j < m_voxels[i].size(); j++) {
-            for (int k = 0; k < m_voxels[i][j].size(); k++) {
-                if (m_voxels[i][j][k]==true) {
-                    // std::cout<<"i "<<i<<" j "<<j<<" k "<<k<<std::endl;
-                    if ( ((k+1) >= m_voxels[i][j].size()) ||  (m_voxels[i][j][k+1]==false)) {
 
-                        // *** + m_position.x - ((int)m_width/2.0)
-                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
-                        float firstCornery = ((float)j*(float)(m_sideLength)) ;
-                        float firstCornerz = ((float)(k+1) * (float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[1] = location[1] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
+    std::unordered_map<uint64_t,uint64_t> edgeToVertex;
+    std::vector<std::pair<glm::vec3,glm::vec3>> verticesData;
 
 
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+    for (int i = -1;i< (int)m_voxels.size(); i++) {
+        for (int j = -1; j < (int)m_voxels[0].size(); j++) {
+            for (int k = -1; k < (int)m_voxels[0][0].size(); k++) {
+
+                bool cValue = getVoxelValue(i,j,k);
+                if (getVoxelValue(i+1,j,k) != cValue) {
+                    //adding the first triangle
+                    glm::vec3 center = (getVoxelPosition(i,j,k) + getVoxelPosition(i+1,j,k))/2.0f;
+
+                    std::vector<int> mapIndex;
+
+                    glm::vec3 v1 = center - glm::vec3(0,m_sideLength/2,m_sideLength/2);
+                    mapIndex.push_back(addVec3KeyTohash(v1,edgeToVertex,verticesData));
+                    glm::vec3 v2 = v1 + glm::vec3(0,m_sideLength,0);
+                    mapIndex.push_back(addVec3KeyTohash(v2,edgeToVertex,verticesData));
+                    glm::vec3 v3 = v1 + glm::vec3(0,0,m_sideLength);
+                    mapIndex.push_back(addVec3KeyTohash(v3,edgeToVertex,verticesData));
+                    glm::vec3 v4 = v1 + glm::vec3(0,m_sideLength,m_sideLength);
+                    mapIndex.push_back(addVec3KeyTohash(v4,edgeToVertex,verticesData));
+
+                    std::vector<int>indexOrder;
+                    if (cValue == true) {
+                        indexOrder = {0,1,2,3,2,1};
+                    }else {
+                        indexOrder = {0,2,1,3,1,2};
                     }
-                    if ( ((k-1) < 0) || (m_voxels[i][j][k-1]==false)) {
-
-                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
-                        float firstCornery = (float)j*(float)(m_sideLength) ;
-                        float firstCornerz = ((float)k * (float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
-                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k * (float)(m_sideLength), 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[1] = location[1] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-
-                        // std::cout<<"last index "<<lastIndex<<std::endl;
-
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+                    for (auto &it:indexOrder) {
+                        m_drawingElement->m_indices.push_back(mapIndex[it]);
                     }
-                    if (((j+1) >= m_voxels[i].size()) || (m_voxels[i][j+1][k] == false) ) {
 
-                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
-                        float firstCornery = (float)(j + 1) * (float)(m_sideLength) ;
-                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+                }
+                if (getVoxelValue(i,j+1,k) != cValue) {
+                    //adding the first triangle
+                    glm::vec3 center = (getVoxelPosition(i,j,k) + getVoxelPosition(i,j+1,k))/2.0f;
 
-                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)(j + 1) * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
+                    std::vector<int> mapIndex;
 
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+                    glm::vec3 v1 = center - glm::vec3(m_sideLength/2,0,m_sideLength/2);
+                    mapIndex.push_back(addVec3KeyTohash(v1,edgeToVertex,verticesData));
+                    glm::vec3 v2 = v1 + glm::vec3(m_sideLength,0,0);
+                    mapIndex.push_back(addVec3KeyTohash(v2,edgeToVertex,verticesData));
+                    glm::vec3 v3 = v1 + glm::vec3(0,0,m_sideLength);
+                    mapIndex.push_back(addVec3KeyTohash(v3,edgeToVertex,verticesData));
+                    glm::vec3 v4 = v1 + glm::vec3(m_sideLength,0,m_sideLength);
+                    mapIndex.push_back(addVec3KeyTohash(v4,edgeToVertex,verticesData));
+
+                    std::vector<int>indexOrder;
+                    if (cValue == true) {
+                        indexOrder = {0,1,2,3,2,1};
+                    }else {
+                        indexOrder = {0,2,1,3,1,2};
                     }
-                    if (((j-1) < 0) || (m_voxels[i][j-1][k] == false)  ) {
-
-                        float firstCornerx = ((float)i*(float)(m_sideLength)) + xoffset;
-                        float firstCornery = (float)j * (float)(m_sideLength) ;
-                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
-
-                        // std::vector<float> location = {(float)i*(float)(m_sideLength),(float)j * (float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[0] = location[0] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+                    for (auto &it:indexOrder) {
+                        m_drawingElement->m_indices.push_back(mapIndex[it]);
                     }
-                    if (((i+1) >= m_voxels.size()) ||  (m_voxels[i+1][j][k] == false) ) {
 
-                        float firstCornerx = ((float)(i + 1) * (float)(m_sideLength)) + xoffset;
-                        float firstCornery = (float)j*(float)(m_sideLength) ;
-                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
+                }
+                if (getVoxelValue(i,j,k+1) != cValue) {
+                    //adding the first triangle
+                    glm::vec3 center = (getVoxelPosition(i,j,k) + getVoxelPosition(i,j,k+1))/2.0f;
 
-                        // std::vector<float> location = {(float)(i + 1) * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[1] = location[1] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
+                    std::vector<int> mapIndex;
 
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+                    glm::vec3 v1 = center - glm::vec3(m_sideLength/2,m_sideLength/2,0);
+                    mapIndex.push_back(addVec3KeyTohash(v1,edgeToVertex,verticesData));
+                    glm::vec3 v2 = v1 + glm::vec3(0,m_sideLength,0);
+                    mapIndex.push_back(addVec3KeyTohash(v2,edgeToVertex,verticesData));
+                    glm::vec3 v3 = v1 + glm::vec3(m_sideLength,0,0);
+                    mapIndex.push_back(addVec3KeyTohash(v3,edgeToVertex,verticesData));
+                    glm::vec3 v4 = v1 + glm::vec3(m_sideLength,m_sideLength,0);
+                    mapIndex.push_back(addVec3KeyTohash(v4,edgeToVertex,verticesData));
+
+                    std::vector<int>indexOrder;
+                    if (cValue == true) {
+                        indexOrder = {0,1,2,3,2,1};
+                    }else {
+                        indexOrder = {0,2,1,3,1,2};
                     }
-                    if ( ((i-1) < 0) ||  (m_voxels[i-1][j][k] == false)) {
-
-                        float firstCornerx = ((float)i * (float)(m_sideLength)) + xoffset;
-                        float firstCornery = (float)j*(float)(m_sideLength) ;
-                        float firstCornerz = ((float)k*(float)(m_sideLength)) + zoffset;
-                        std::vector<float> location = {firstCornerx,firstCornery,firstCornerz, 1.0f, 1.0f};
-
-                        // std::vector<float> location = {(float)i * (float)(m_sideLength),(float)j*(float)(m_sideLength),(float)k*(float)(m_sideLength), 1.0f, 1.0f};
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] + (float)m_sideLength;
-                        location[4] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[1] = location[1] + (float)m_sideLength;
-                        location[3] = 0.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-                        location[2] = location[2] - (float)m_sideLength;
-                        location[4] = 1.0f;
-                        m_drawingElement->m_vertices.insert(m_drawingElement->m_vertices.end(),location.begin(),location.end());
-
-                        std::vector<int>indicesAppendArray = {lastIndex, lastIndex+1, lastIndex+3, lastIndex+1, lastIndex+2, lastIndex+3};
-                        m_drawingElement->m_indices.insert(m_drawingElement->m_indices.end(),indicesAppendArray.begin(),indicesAppendArray.end());
-                        lastIndex += 4;
+                    for (auto &it:indexOrder) {
+                        m_drawingElement->m_indices.push_back(mapIndex[it]);
                     }
 
                 }
@@ -227,9 +166,36 @@ void VoxelManager::setupChunk() {
         }
     }
 
+    for (int i = 0;i<m_drawingElement->m_indices.size();i+=3) {
+        int i1 = m_drawingElement->m_indices[i];
+        int i2 = m_drawingElement->m_indices[i+1];
+        int i3 = m_drawingElement->m_indices[i+2];
+
+        glm::vec3 n = glm::normalize(glm::cross(
+           verticesData[i2].first - verticesData[i1].first,
+           verticesData[i3].first - verticesData[i1].first));
+
+        verticesData[i1].second += n;
+        verticesData[i2].second += n;
+        verticesData[i3].second += n;
+    }
+
+    for (auto &it:verticesData) {
+        it.second = glm::normalize(it.second);
+    }
+
+    for (int i = 0;i<verticesData.size();i++) {
+        m_drawingElement->m_vertices.push_back(verticesData[i].first.x);
+        m_drawingElement->m_vertices.push_back(verticesData[i].first.y);
+        m_drawingElement->m_vertices.push_back(verticesData[i].first.z);
+        m_drawingElement->m_vertices.push_back(verticesData[i].second.x);
+        m_drawingElement->m_vertices.push_back(verticesData[i].second.y);
+        m_drawingElement->m_vertices.push_back(verticesData[i].second.z);
+    }
 
 
     m_drawingElement->setup();
+
 
     std::cout<<"chunk setup done"<<std::endl;
 }
@@ -279,12 +245,6 @@ void VoxelManager::applyMarchingCube() {
                         auto it = std::find(edgesList.begin(), edgesList.end(), triValue[itr]);
                         int listIndex = it - edgesList.begin();
                         m_drawingElement->m_indices.push_back(mapIndex[listIndex]);
-                        // int edgeIndex = triValue[itr];
-                        // glm::vec3 edgeLocation = getEdgeLocation(i,j,k,edgeIndex);
-                        // uint64_t edgeKey = getEdgeKey(edgeLocation);
-                        // if (edgeToVertex.count(edgeKey) > 0) {
-                        //     m_drawingElement->m_indices.push_back(edgeToVertex[edgeKey]);
-                        // }
                     }
                 }
             }
@@ -295,10 +255,6 @@ void VoxelManager::applyMarchingCube() {
         int i1 = m_drawingElement->m_indices[i];
         int i2 = m_drawingElement->m_indices[i+1];
         int i3 = m_drawingElement->m_indices[i+2];
-        //
-        // std::pair<glm::vec3,glm::vec3> vertexInfo1 = verticesData[index1];
-        // std::pair<glm::vec3,glm::vec3> vertexInfo2 = verticesData[index2];
-        // std::pair<glm::vec3,glm::vec3> vertexInfo3 = verticesData[index3];
 
         glm::vec3 n = glm::normalize(glm::cross(
            verticesData[i2].first - verticesData[i1].first,
@@ -337,7 +293,7 @@ bool VoxelManager::getVoxelValue(int x, int y, int z) {
 }
 
 glm::vec3 VoxelManager::getVoxelPosition(int x, int y, int z) {
-    glm::vec3 cornerPosition = m_position - glm::vec3((float)(m_width * m_sideLength)/2.0f,0,(float)(m_length * m_sideLength)/2.0f);
+    glm::vec3 cornerPosition = getCornerPosition();
     glm::vec3 voxelPosition = cornerPosition + glm::vec3(x * m_sideLength,y * m_sideLength, z * m_sideLength);
     voxelPosition += glm::vec3((float)m_sideLength/2.0f,(float)m_sideLength/2.0f,(float)m_sideLength/2.0f);
     return voxelPosition;
@@ -401,37 +357,59 @@ std::vector<int> VoxelManager::getEdgesIndex(int value) {
 }
 
 uint64_t VoxelManager::getEdgeKey(glm::vec3 edge) {
-    // uint64_t maxLen = 3000;//std::max(m_length,std::max(m_width,m_length));
-    // uint64_t factor = maxLen;
-    // uint64_t key = (uint64_t)((edge.x * 10)+ maxLen);
-    // key = ((uint64_t)((edge.y * 10) + maxLen) * factor) + key;
-    //
-    // factor = factor * factor;
-    // key = ((uint64_t)((edge.z*10) + maxLen) * factor) + key;
-    // return key;
-
 
     int64_t maxLen = 3000;
     int64_t factor = 6000;
 
-    // Add maxLen before converting to uint64_t to prevent negative underflow
-    uint64_t key = (uint64_t)((int64_t)std::round(edge.x * 10.0f) + maxLen);
-    key = ((uint64_t)((int64_t)std::round(edge.y * 10.0f) + maxLen) * factor) + key;
+    uint64_t key = (uint64_t)((int64_t)(edge.x * 10.0f) + maxLen);
+    key = ((uint64_t)((int64_t)(edge.y * 10.0f) + maxLen) * factor) + key;
 
     uint64_t factor2 = factor * factor;
-    key = ((uint64_t)((int64_t)std::round(edge.z * 10.0f) + maxLen) * factor2) + key;
+    key = ((uint64_t)((int64_t)(edge.z * 10.0f) + maxLen) * factor2) + key;
+
+    return key;
+
+}
+
+uint64_t VoxelManager::getVertexKey(glm::vec3 vertex) {
+    glm::vec3 cornerPosition = getCornerPosition();
+    glm::vec3 difference = vertex - cornerPosition;
+    uint64_t x = difference.x / m_sideLength;
+    uint64_t y = difference.y / m_sideLength;
+    uint64_t z = difference.z / m_sideLength;
+
+    int64_t maxLen = 300;
+    int64_t factor = 300;
+
+    uint64_t key = (uint64_t)((int64_t)x + maxLen);
+    key = ((uint64_t)((int64_t)y + maxLen) * factor) + key;
+
+    uint64_t factor2 = factor * factor;
+    key = ((uint64_t)((int64_t)z + maxLen) * factor2) + key;
 
     return key;
 
 
-    // int32_t maxDist = 1000;
-    // int32_t factor = maxDist * 2;
-    // int32_t key = ((int32_t)std::round(edge.x) + maxDist);
-    // key = (((int32_t)std::round(edge.y) + maxDist) * factor) + key;
-    // factor = factor * factor;
-    //
-    // key = (((int32_t)std::round(edge.z) + maxDist) * factor) + key;
-    // return key;
+}
+
+glm::vec3 VoxelManager::getCornerPosition() {
+    glm::vec3 cornerPosition = m_position - glm::vec3((float)(m_length * m_sideLength)/2.0f,0,(float)(m_width * m_sideLength)/2.0f);
+    return cornerPosition;
+}
+
+
+int VoxelManager::addVec3KeyTohash(glm::vec3 vertex, std::unordered_map<uint64_t,uint64_t> &edgeToVertex,std::vector<std::pair<glm::vec3,glm::vec3>> &verticesData) {
+    int key = getVertexKey(vertex);
+    int vertexIndex ;//= verticesData.size();
+    if (edgeToVertex.count(key) == 0) {
+        vertexIndex = verticesData.size();
+        edgeToVertex[key] = vertexIndex;
+        verticesData.push_back({vertex,glm::vec3(0,0,0)});
+    }
+    else {
+        vertexIndex = edgeToVertex[key];
+    }
+    return vertexIndex;
 }
 
 glm::vec3 VoxelManager::getVoxelNormal(int x, int y, int z) {
@@ -476,14 +454,16 @@ void VoxelManager::draw(glm::mat4 view,glm::mat4 projection) {
     m_drawingElement->m_shader.use();
     glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
     glBindTexture(GL_TEXTURE_2D, m_texture);
-    m_drawingElement->m_shader.setVec3("lightSource", glm::vec3(100.0,100.0,100.0));
+    m_drawingElement->m_shader.setVec3("lightSource", glm::vec3(300.0,300.0,300.0));
     m_drawingElement->draw(view,projection);
 }
 
 glm::vec3 VoxelManager::checkVoxel(glm::vec3 location) {
-    glm::vec3 offset = glm::vec3((float)m_width/2.0f,0,(float)m_length/2.0f);
-    glm::vec3 corner = m_position - offset;
-    location = location - corner;
+    // glm::vec3 offset = glm::vec3((float)m_width/2.0f,0,(float)m_length/2.0f);
+    // glm::vec3 corner = m_position - offset;
+
+    glm::vec3 cornerPosition = getCornerPosition();
+    location = location - cornerPosition;
     int xVoxel = location.x / m_sideLength;
     int yVoxel = location.y / m_sideLength;
     int zVoxel = location.z / m_sideLength;

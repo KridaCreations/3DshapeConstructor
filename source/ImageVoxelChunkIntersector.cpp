@@ -51,3 +51,54 @@ void ImageVoxelChunkIntersector::moveStep() {
 }
 
 
+void ImageVoxelChunkIntersector::perspectiveIntersection() {
+
+    // glm::mat4 view = glm::lookAt(cameraPos,cameraPos + cameraFront,cameraUp);
+    //
+    // glm::mat4 projection = glm::mat4(1.0f);
+    //
+    // projection = glm::perspective(glm::radians(fov),800.0f/600.0f,0.01f,2000.f);
+    glm::vec3 cameraPos = m_image->m_position;//(m_voxelManager->m_position  - (80.0f * m_image->m_forwardVector));
+    cameraPos.y = m_image->m_position.y;
+    glm::vec3 cameraFront = cameraPos + m_image->m_forwardVector;
+
+    std::cout<<"camera pos "<<cameraPos.x<<","<<cameraPos.y<<","<<cameraPos.z<<std::endl;
+
+    std::cout<<"fx "<<(fx/m_image->m_ratio)<<" fy "<<(fy/m_image->m_ratio)<<std::endl;
+
+    float cameraFocalLegth = 24.0f;
+    glm::mat4 view = glm::lookAt(cameraPos, cameraFront, glm::vec3(0.0f, 1.0f, 0.0f));
+    auto &voxels = m_voxelManager->m_voxels;
+    for (int i = 0 ; i < voxels.size(); i++) {
+        for (int j = 0;j < voxels[0].size(); j++) {
+            for (int k = 0;k < voxels[0][0].size(); k++) {
+                glm::vec3 voxelPosition = m_voxelManager->getVoxelPosition(i,j,k);
+                glm::vec3 cameraSpaceVoxelPosition = view * glm::vec4(voxelPosition,1.0f);
+
+                // 1. If the voxel is behind the camera (OpenGL Z > 0 is behind), turn it off and skip.
+                if (cameraSpaceVoxelPosition.z >= 0.0f) {
+                    m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
+                    continue;
+                }
+
+
+
+                float pX = (fx * (cameraSpaceVoxelPosition.x / (1.0f * cameraSpaceVoxelPosition.z))) + cx;
+                pX = pX / m_image->m_ratio;
+
+                float pY = (fy * (cameraSpaceVoxelPosition.y / (1.0f * cameraSpaceVoxelPosition.z))) + cy;
+                pY = pY / m_image->m_ratio;
+
+                if (((pY >= 0) && (pY < m_image->m_height)) && ((pX >= 0) && (pX < m_image->m_width))) {
+                    if (m_image->isPixelTransparent((int)pY,(int)pX)) {
+                        m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
+                    }
+                }else {
+                    m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
+                }
+
+            }
+        }
+    }
+}
+

@@ -98,79 +98,105 @@ int main()
     // pushing the x Axis
     Shader ourShader("../source/Shaders/axisVertexShader.shader", "../source/Shaders/axisFragmentShader.shader");
 
-    DrawingElement xAxis(ourShader);
-    xAxis.setType(DrawingElement::DrawElementType::LINES);
-    xAxis.setVertices({
-                          -1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
-                          1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
-                      },6);
-    xAxis.setIndices({
-        0, 1
-    });
-    xAxis.setAttributeArray({
-    {3,true},
-    {3,true}
-    });
-    xAxis.setup();
-    drawingElementsList.push_back(xAxis);
+    {
+        DrawingElement xAxis(ourShader);
+        xAxis.setType(DrawingElement::DrawElementType::LINES);
+        xAxis.setVertices({
+                              -1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f,
+                              1000.0f, 0.0f, 0.0f,     1.0f, 0.0f, 0.0f
+                          },6);
+        xAxis.setIndices({
+            0, 1
+        });
+        xAxis.setAttributeArray({
+        {3,true},
+        {3,true}
+        });
+        xAxis.setup();
+        drawingElementsList.push_back(xAxis);
+    }
 
+    {
+        DrawingElement yAxis(ourShader);
+        yAxis.setType(DrawingElement::DrawElementType::LINES);
+        yAxis.setVertices({
+                              0.0f, -1000.0f, 0.0f,      0.0f, 1.0f, 0.0f,
+                              0.0f,  1000.0f, 0.0f,      0.0f, 1.0f, 0.0f
+                          },6);
+        yAxis.setIndices({
+            0, 1
+        });
+        yAxis.setAttributeArray({
+        {3,true},
+        {3,true}
+        });
+        yAxis.setup();
+        drawingElementsList.push_back(yAxis);
+    }
 
-    DrawingElement yAxis(ourShader);
-    yAxis.setType(DrawingElement::DrawElementType::LINES);
-    yAxis.setVertices({
-                          0.0f, -1000.0f, 0.0f,      0.0f, 1.0f, 0.0f,
-                          0.0f,  1000.0f, 0.0f,      0.0f, 1.0f, 0.0f
-                      },6);
-    yAxis.setIndices({
-        0, 1
-    });
-    yAxis.setAttributeArray({
-    {3,true},
-    {3,true}
-    });
-    yAxis.setup();
-    drawingElementsList.push_back(yAxis);
-
-    DrawingElement zAxis(ourShader);
-    zAxis.setType(DrawingElement::DrawElementType::LINES);
-    zAxis.setVertices({
-                          0.0f, 0.0f, -1000.0f,      0.0f, 0.0f, 1.0f,
-                          0.0f, 0.0f,  1000.0f,      0.0f, 0.0f, 1.0f
-                      },6);
-    zAxis.setIndices({
-        0, 1
-    });
-    zAxis.setAttributeArray({
-    {3,true},
-    {3,true}
-    });
-    zAxis.setup();
-    drawingElementsList.push_back(zAxis);
+    {
+        DrawingElement zAxis(ourShader);
+        zAxis.setType(DrawingElement::DrawElementType::LINES);
+        zAxis.setVertices({
+                              0.0f, 0.0f, -1000.0f,      0.0f, 0.0f, 1.0f,
+                              0.0f, 0.0f,  1000.0f,      0.0f, 0.0f, 1.0f
+                          },6);
+        zAxis.setIndices({
+            0, 1
+        });
+        zAxis.setAttributeArray({
+        {3,true},
+        {3,true}
+        });
+        zAxis.setup();
+        drawingElementsList.push_back(zAxis);
+    }
 
     Shader chunkShader("../source/Shaders/VoxelVertexShader.shader", "../source/Shaders/VoxelFragmentShader.shader");
     float sideLength = 1;
-    // int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
-    int chunklength = 25,chunkWidth = 25, chunkHeight = 37;
+    // int chunklength = 600,chunkWidth = 600, chunkHeight = 750;
+    int chunklength = 200,chunkWidth = 200, chunkHeight = 250;
+    // int chunklength = 25,chunkWidth = 25, chunkHeight = 37;
+    // int chunklength = 50,chunkWidth = 50, chunkHeight = 75;
     // int chunklength = 1,chunkWidth = 1, chunkHeight = 1;
     VoxelManager newChunk(chunklength,chunkWidth,chunkHeight,sideLength,"../source/Resources/GreenRectangle.png",chunkShader,glm::vec3(0,0,0));
     // newChunk.setupChunk();
-    newChunk.applyMarchingCube();
+    // newChunk.applyMarchingCube();
     float chunkDiagonal = glm::sqrt(((chunkWidth * chunkWidth) + (chunkHeight * chunkHeight)));
 
 
     Shader imageShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
-    float angleGap = 1;
+    std::vector<std::string> imagesList;
+    // std::vector<std::string> imagesList = {
+    //     "../source/Resources/imageFolder9/test1.jpeg",
+    //     "../source/Resources/imageFolder9/test2.jpeg",
+    //     "../source/Resources/imageFolder9/test3.jpeg",
+    //     "../source/Resources/imageFolder9/test4.jpeg",
+    //     "../source/Resources/imageFolder9/test5.jpeg",
+    //     "../source/Resources/imageFolder9/test6.jpeg",
+    // };
+    for (int i = 1;i<=6;i++) {
+        imagesList.push_back("../source/Resources/imageFolder11/test" + std::to_string(i) +".jpeg");
+    }
     std::vector<ImageOutlineManager>images;
+    float angleGap = 30;
     for (float i = 0;i<180.0f;i += angleGap) {
-        int imageHeight = ((float)chunkHeight)*sideLength, imageWidth = ((float)chunkWidth)*sideLength;
+        float ratioFactor = 1;
+        int imageHeight = ((float)1000.0f)*(sideLength/ratioFactor), imageWidth = ((float)1000.0f)*(sideLength/ratioFactor);
+        // int imageHeight = ((float)chunkHeight)*(sideLength/ratioFactor), imageWidth = ((float)chunkWidth)*(sideLength/ratioFactor);
         glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i))*1,0,glm::cos(glm::radians(i))* -1);
-        glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
-        imagePosition.y = newChunk.m_height/2.0f;
-        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",imageShader);
+        // glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
+        // glm::vec3 imagePosition = newChunk.m_position - (forwardVector * (50.0f + (float)chunklength/2.0f));
+        glm::vec3 imagePosition = newChunk.m_position - (forwardVector * (240.0f));
+        // imagePosition.y = (newChunk.m_height * newChunk.m_sideLength)/2.0f;
+        imagePosition.y = 0;
+        // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",imageShader);
+        // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/playDoughDummy.jpg",imageShader);
+        // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/test7.jpeg",imageShader);
+        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,imagesList[i/30],imageShader);
         newImage3d.setupImageIn3dSpace();
         images.push_back(newImage3d);
     }
-
 
 
     std::vector<ImageVoxelChunkIntersector> intersectorArray;
@@ -221,24 +247,39 @@ int main()
 
 
         if (currentIntersector < intersectorArray.size()) {
-            if (intersectorArray[currentIntersector].isDone() == false) {
-                if (intersectorArray[currentIntersector].isRunning() == false) {
-                    std::cout<<"starting the intersector  "<<currentIntersector<<std::endl;
-                    intersectorArray[currentIntersector].start(sideLength);
-                }else {
-                    intersectorArray[currentIntersector].moveStep();
-                    // std::cout<<"moved the intersector"<<std::endl;
-                }
-                if (intersectorArray[currentIntersector].isDone() == true) {
-                    std::cout<<"done moving the intersector "<<currentIntersector<<std::endl;
-                    // newChunk.setupChunk();
-                    newChunk.applyMarchingCube();
-                }
-            }
-            else {
-                currentIntersector++;
+            intersectorArray[currentIntersector].perspectiveIntersection();
+            currentIntersector++;
+            if (currentIntersector >= intersectorArray.size()) {
+                newChunk.setupChunk();
             }
         }
+
+        // if (currentIntersector < intersectorArray.size()) {
+        //     if (intersectorArray[currentIntersector].isDone() == false) {
+        //         if (intersectorArray[currentIntersector].isRunning() == false) {
+        //             std::cout<<"starting the intersector  "<<currentIntersector<<std::endl;
+        //             intersectorArray[currentIntersector].start(sideLength * 0.40);
+        //         }else {
+        //             intersectorArray[currentIntersector].moveStep();
+        //             // std::cout<<"moved the intersector"<<std::endl;
+        //         }
+        //         if (intersectorArray[currentIntersector].isDone() == true) {
+        //             std::cout<<"done moving the intersector "<<currentIntersector<<std::endl;
+        //             // newChunk.setupChunk();
+        //             newChunk.applyMarchingCube();
+        //         }
+        //     }
+        //     else {
+        //         currentIntersector++;
+        //     }
+        //     // if (currentIntersector >= intersectorArray.size()) {
+        //     //     newChunk.setupChunk();
+        //     // }
+        //
+        //     // intersectorArray[currentIntersector].perspectiveIntersection();
+        //     // currentIntersector++;
+        // }
+
 
     }
 

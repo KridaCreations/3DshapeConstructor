@@ -18,6 +18,11 @@ class ImageVoxelChunkIntersector {
     VoxelManager *m_voxelManager;
     ImageOutlineManager *m_image;
 
+    float fx = 3022.566;
+    float fy = 2999.203;
+    float cx = 1573.326;
+    float cy = 2085.685;
+
     bool started = false, running = false,done = false,once = false;
 
     float m_imageStep = 0.0f;
@@ -32,6 +37,8 @@ class ImageVoxelChunkIntersector {
 
     void start(float step);
     void moveStep();
+
+    void perspectiveIntersection();
 
 
 };
