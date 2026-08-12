@@ -74,22 +74,40 @@ void ImageVoxelChunkIntersector::perspectiveIntersection() {
             for (int k = 0;k < voxels[0][0].size(); k++) {
                 glm::vec3 voxelPosition = m_voxelManager->getVoxelPosition(i,j,k);
                 glm::vec3 cameraSpaceVoxelPosition = view * glm::vec4(voxelPosition,1.0f);
-
+                if (voxelPosition == glm::vec3(0.5f,0.5f,0.5f)) {
+                    std::cout<<cameraSpaceVoxelPosition.x<<", "<<cameraSpaceVoxelPosition.y<<", "<<cameraSpaceVoxelPosition.z<<std::endl;
+                }
                 // 1. If the voxel is behind the camera (OpenGL Z > 0 is behind), turn it off and skip.
-                if (cameraSpaceVoxelPosition.z >= 0.0f) {
-                    m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
+                // if (cameraSpaceVoxelPosition.z >= 0.0f) {
+                //     m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
+                //     continue;
+                // }
+
+
+
+                // float pX = (fx * (cameraSpaceVoxelPosition.x / (1.0f * cameraSpaceVoxelPosition.z))) + cx;
+                // pX = pX / m_image->m_ratio;
+                //
+                // float pY =  cy - (fy * (cameraSpaceVoxelPosition.y / (1.0f * cameraSpaceVoxelPosition.z)));
+                // pY = pY / m_image->m_ratio;
+
+
+                float depth = -cameraSpaceVoxelPosition.z;
+
+                if (depth <= 0.0f) {
+                    m_voxelManager->switchOffVoxel(glm::vec3(i, j, k));
                     continue;
                 }
 
-
-
-                float pX = (fx * (cameraSpaceVoxelPosition.x / (1.0f * cameraSpaceVoxelPosition.z))) + cx;
-                pX = pX / m_image->m_ratio;
-
-                float pY = (fy * (cameraSpaceVoxelPosition.y / (1.0f * cameraSpaceVoxelPosition.z))) + cy;
-                pY = pY / m_image->m_ratio;
-
+                float pX = (fx * (cameraSpaceVoxelPosition.x / depth) + cx) / m_image->m_ratio;
+                float pY = (cy - fy * (cameraSpaceVoxelPosition.y / depth)) / m_image->m_ratio;
                 if (((pY >= 0) && (pY < m_image->m_height)) && ((pX >= 0) && (pX < m_image->m_width))) {
+                    if (i == 100 && k == 100 && (j == 40 || j == 80 || j == 120)) {
+                        std::cout << "voxel " << i << "," << j << "," << k
+                                  << " -> pixel " << pX << "," << pY
+                                  << " transparent=" << m_image->isPixelTransparent((int)pY, (int)pX)
+                                  << std::endl;
+                    }
                     if (m_image->isPixelTransparent((int)pY,(int)pX)) {
                         m_voxelManager->switchOffVoxel(glm::vec3(i,j,k));
                     }

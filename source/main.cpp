@@ -166,34 +166,37 @@ int main()
 
 
     Shader imageShader("../source/Shaders/VertexShader.shader", "../source/Shaders/FragmentShader.shader");
-    std::vector<std::string> imagesList;
-    // std::vector<std::string> imagesList = {
-    //     "../source/Resources/imageFolder9/test1.jpeg",
-    //     "../source/Resources/imageFolder9/test2.jpeg",
-    //     "../source/Resources/imageFolder9/test3.jpeg",
-    //     "../source/Resources/imageFolder9/test4.jpeg",
-    //     "../source/Resources/imageFolder9/test5.jpeg",
-    //     "../source/Resources/imageFolder9/test6.jpeg",
-    // };
-    for (int i = 1;i<=6;i++) {
-        imagesList.push_back("../source/Resources/imageFolder11/test" + std::to_string(i) +".jpeg");
-    }
+    // std::vector<std::string> imagesList;
+    std::vector<std::string> imagesList = {
+        "../source/Resources/imageFolder12/test1.jpeg",
+        // "../source/Resources/imageFolder12/test2.jpeg",
+        // "../source/Resources/imageFolder12/test3.jpeg",
+        // "../source/Resources/imageFolder12/test4.jpeg",
+        "../source/Resources/imageFolder12/test5.jpeg",
+        // "../source/Resources/imageFolder12/test6.jpeg",
+    };
+    // for (int i = 1;i<=6;i++) {
+    //     imagesList.push_back("../source/Resources/imageFolder12/test" + std::to_string(i) +".jpeg");
+    // }
     std::vector<ImageOutlineManager>images;
-    float angleGap = 30;
-    for (float i = 0;i<180.0f;i += angleGap) {
+    float angleGap = 120;
+    for (float i = 0;i < imagesList.size();i += 1) {
+        std::cout<<"i "<<i<<std::endl;
         float ratioFactor = 1;
         int imageHeight = ((float)1000.0f)*(sideLength/ratioFactor), imageWidth = ((float)1000.0f)*(sideLength/ratioFactor);
         // int imageHeight = ((float)chunkHeight)*(sideLength/ratioFactor), imageWidth = ((float)chunkWidth)*(sideLength/ratioFactor);
-        glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i))*1,0,glm::cos(glm::radians(i))* -1);
+        glm::vec3 forwardVector = glm::vec3(glm::sin(glm::radians(i*angleGap))*1,0,glm::cos(glm::radians(i * angleGap))* -1);
+        std::cout<<"angle "<<(i*angleGap)<<std::endl;
         // glm::vec3 imagePosition = newChunk.m_position - (forwardVector * ((chunkDiagonal / 2.0f) * 1.5f));
         // glm::vec3 imagePosition = newChunk.m_position - (forwardVector * (50.0f + (float)chunklength/2.0f));
-        glm::vec3 imagePosition = newChunk.m_position - (forwardVector * (240.0f));
+        glm::vec3 imagePosition = newChunk.m_position - (forwardVector * (512.0f));
         // imagePosition.y = (newChunk.m_height * newChunk.m_sideLength)/2.0f;
+        std::cout<<"image position "<<imagePosition.x<<", "<<imagePosition.y<<", "<<imagePosition.z<<std::endl;
         imagePosition.y = 0;
         // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/bottlePlushie.png",imageShader);
         // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/playDoughDummy.jpg",imageShader);
         // ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,"../source/Resources/test7.jpeg",imageShader);
-        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,imagesList[i/30],imageShader);
+        ImageOutlineManager newImage3d(imageHeight,imageWidth,imagePosition,forwardVector,imagesList[i],imageShader);
         newImage3d.setupImageIn3dSpace();
         images.push_back(newImage3d);
     }
